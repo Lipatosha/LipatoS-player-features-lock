@@ -1,0 +1,35 @@
+{
+  "id": "lipatos-player-features-lock",
+  "title": "LipatoS — Блокировка особенностей игрока",
+  "description": "Запрещает обычным игрокам изменять поля во вкладке «Особенности». Исключение — селектор уровня класса, если ГМ разрешил его через LipatoS-player-level-edit.",
+  "version": "1.0.2",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "LipatoS"
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/features-lock.css"
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "verified": "6.0.3"
+        }
+      }
+    ]
+  },
+  "manifest": "https://raw.githubusercontent.com/Lipatosha/LipatoS-player-features-lock/main/module.json",
+  "download": "https://raw.githubusercontent.com/Lipatosha/LipatoS-player-features-lock/main/lipatos-player-features-lock-v1.0.2.zip"
+}

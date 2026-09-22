@@ -1,0 +1,31 @@
+.lipatos-gm-only-feature-control {
+  cursor: not-allowed !important;
+}
+
+input.lipatos-gm-only-feature-control,
+textarea.lipatos-gm-only-feature-control,
+select.lipatos-gm-only-feature-control {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+#lipatos-player-features-lock-tooltip {
+  position: fixed;
+  z-index: 1000000;
+  display: none;
+  pointer-events: none;
+  padding: 6px 9px;
+  border: 1px solid rgba(202, 180, 122, 0.75);
+  border-radius: 4px;
+  background: rgba(24, 24, 28, 0.97);
+  color: #f0e6cf;
+  font-family: "Roboto Condensed", sans-serif;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+#lipatos-player-features-lock-tooltip.visible {
+  display: block;
+}

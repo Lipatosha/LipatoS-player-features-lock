@@ -32,6 +32,16 @@ function isPlayer() {
   return game?.user && !game.user.isGM;
 }
 
+function isCharacterForgeUi(element, app = null) {
+  const appName = app?.constructor?.name || "";
+  if (appName === "OriginateApp" || appName === "LevelUpApp") return true;
+
+  if (!(element instanceof Element)) return false;
+  return !!element.closest?.(
+    '#originate-char-gen, .originate-app, .originate-sub-interface, .originate-levelup-wizard, .originate-progression-wizard'
+  );
+}
+
 function getActorFromRoot(root) {
   const actorId = root?.dataset?.lipatosActorId;
   return actorId ? game.actors?.get(actorId) : null;
@@ -87,6 +97,16 @@ function markCharacterSheet(app, html) {
   const el = root instanceof HTMLElement ? root : root?.[0];
   if (!(el instanceof HTMLElement)) return;
 
+  // Character Forge тоже имеет actor/document, но это не лист персонажа.
+  // Раньше renderApplicationV2 ошибочно помечал его как character sheet,
+  // и все checkbox ItemChoice блокировались только у игроков.
+  if (isCharacterForgeUi(el, app)) {
+    delete el.dataset.lipatosCharacterSheet;
+    delete el.dataset.lipatosActorId;
+    el.querySelectorAll?.('.' + LOCK_CLASS).forEach(unlockControl);
+    return;
+  }
+
   el.dataset.lipatosCharacterSheet = "true";
   el.dataset.lipatosActorId = actor.id;
   lockFeatureControls(el);
@@ -122,6 +142,9 @@ function isInsideFeatures(control, root) {
 }
 
 function findCharacterRoot(control) {
+  // Никогда не считаем интерфейс Character Forge частью вкладки «Особенности».
+  if (isCharacterForgeUi(control)) return null;
+
   const marked = control.closest('[data-lipatos-character-sheet="true"]');
   if (marked) return marked;
 
@@ -174,6 +197,11 @@ function lockFeatureControls(root = document) {
     : Array.from(root.querySelectorAll?.(CONTROL_SELECTOR) ?? []);
 
   for (const control of controls) {
+    if (isCharacterForgeUi(control)) {
+      unlockControl(control);
+      continue;
+    }
+
     const sheetRoot = findCharacterRoot(control)
       ?? (root.dataset?.lipatosCharacterSheet === "true" ? root : null);
     if (!sheetRoot) continue;

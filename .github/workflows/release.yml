@@ -1,0 +1,74 @@
+name: Build Foundry release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - module.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: foundry-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          find scripts -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Read version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(jq -r '.version' module.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Skip existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build ZIP
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          zip -r lipatos-player-features-lock.zip module.json scripts styles README.md CHANGELOG.md
+
+      - name: Create and push tag
+        if: steps.existing.outputs.exists != 'true'
+        shell: bash
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin."
+          else
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "$TAG"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.existing.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}"             lipatos-player-features-lock.zip module.json             --title "LipatoS — Блокировка особенностей игрока ${{ steps.version.outputs.version }}"             --generate-notes             --verify-tag
